@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <fstream>
 
 using namespace std;
 
@@ -79,10 +80,17 @@ int main(){
 		VisitedCities.push_back(VisitableCities[theclosestcity]);
 		VisitableCities.erase(VisitableCities.begin() + theclosestcity);
 	}
-	cout << "[";
+	ofstream outputfile;
+	outputfile.open ("solution.txt");
+
+	outputfile << "[";
 	for(int i = 0 ; i < VisitedCities.size(); i++){
-		cout << VisitedCities[i].giveNo() << ",";
+		outputfile << VisitedCities[i].giveNo();
+		if(i != VisitedCities.size()-1){
+			outputfile << ",";
+		}
 	}
-	cout << "]";
+	outputfile << "]";
+	outputfile.close();
 	return 0;
 }
