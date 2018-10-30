@@ -35,6 +35,25 @@ public:
 	}
 };
 
+class Item{
+private:
+	int itemNo;
+	int itemProfit;
+	int itemWeight;
+	int itemLocation;
+public:
+	Item(){
+
+	};
+	Item(int N, int P, int W, int L){
+		itemNo = N;
+		itemProfit = P;
+		itemWeight = W;
+		itemLocation = L;	
+	};
+
+};
+
 int closestCity(int X, int Y,vector<City> cities){
 	int cityNumber;
 	int closestDistance = cities[0].calculateDistance(X,Y);
@@ -63,6 +82,7 @@ int main(){
 	test3 = City(3,10,0);
 	test4 = City(4,10,10);
 	vector<City> CityHolder;
+	vector<Item> Knapsack;
 	CityHolder.push_back(test1);
 	CityHolder.push_back(test2);
 	CityHolder.push_back(test3);
@@ -87,6 +107,13 @@ int main(){
 	for(int i = 0 ; i < VisitedCities.size(); i++){
 		outputfile << VisitedCities[i].giveNo();
 		if(i != VisitedCities.size()-1){
+			outputfile << ",";
+		}
+	}
+	outputfile << "]" << endl;
+	outputfile << "[";
+	for(int i = 0 ; i < Knapsack.size(); i++){
+		if(i != Knapsack.size()-1){
 			outputfile << ",";
 		}
 	}
