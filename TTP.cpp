@@ -3,14 +3,39 @@
 #include <string>
 #include <cmath>
 #include <fstream>
+#include <cstring>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
+
+class Item{
+private:
+	int itemNo;
+	int itemProfit;
+	int itemWeight;
+	// int itemLocation;
+	bool stolen;
+public:
+	Item(){
+		stolen = false;
+	};
+	Item(int N, int P, int W){
+		itemNo = N;
+		itemProfit = P;
+		itemWeight = W;
+		// itemLocation = L;
+		stolen = false;
+	};
+
+};
 
 class City{
 private:
 	int cityNo;
 	int locX;
 	int locY;
+	vector<Item> cityItems;
 public:
 	City(){
 	};
@@ -33,25 +58,15 @@ public:
 	int giveNo(){
 		return cityNo;
 	}
+	void addItem(Item item){
+		cityItems.push_back(item);
+	}
 };
 
-class Item{
-private:
-	int itemNo;
-	int itemProfit;
-	int itemWeight;
-	int itemLocation;
+class Tour{
 public:
-	Item(){
-
-	};
-	Item(int N, int P, int W, int L){
-		itemNo = N;
-		itemProfit = P;
-		itemWeight = W;
-		itemLocation = L;	
-	};
-
+	Tour();
+	~Tour();
 };
 
 int closestCity(int X, int Y,vector<City> cities){
@@ -76,23 +91,107 @@ int closestCity(int X, int Y,vector<City> cities){
 }
 
 int main(){
-	City test1,test2,test3,test4;
-	test1 = City(1,0,0);
-	test2 = City(2,0,10);
-	test3 = City(3,10,0);
-	test4 = City(4,10,10);
+	FILE *input;
+	char buff[512];
+
+	int numCities,numItems,knapCapacity,gottenCities=0,gottenItems=0;
+	double minSpeed,maxSpeed,rentingRatio;
+
 	vector<City> CityHolder;
 	vector<Item> Knapsack;
-	CityHolder.push_back(test1);
-	CityHolder.push_back(test2);
-	CityHolder.push_back(test3);
-	CityHolder.push_back(test4);
+
+	// read the input file
+	if(!(input = popen("cat simple4_n6.ttp", "r"))){
+		return 1;
+	}
+
+	bool gettingCities=false,gettingItems=false;
+
+	// read each single substring of the buffer
+	while(fgets(buff, sizeof(buff), input)!=NULL){
+		istringstream str(buff);
+		string current;
+		while(str >> current)
+		{
+			// get number of cities
+			if(current == "DIMENSION:"){
+				str >> numCities;
+				cout << "number of cities is " << numCities << endl;
+			}
+			// get number of items
+			if(current == "ITEMS:"){
+				str >> numItems;
+				cout << "number of items is " << numItems << endl;
+			}
+			// get knapsack capacity
+			if(current == "KNAPSACK:"){
+				str >> knapCapacity;
+				cout << "knapsack capacity is " << knapCapacity << endl;
+			}
+			// get min and max speed
+			if(current == "MIN"){
+				str >> current;
+				str >> minSpeed;
+				cout << "min speed is " << minSpeed << endl;
+			}
+			if(current == "MAX"){
+				str >> current;
+				str >> maxSpeed;
+				cout << "max speed is " << maxSpeed << endl;
+			}
+			// get renting ratio
+			if(current == "RATIO:"){
+				str >> rentingRatio;
+				cout << "renting ratio is " << rentingRatio << endl;
+			}
+			// get the cities
+			if(gettingCities && gottenCities<numCities){
+				// cout << "current is " << current << endl;
+				int index,x,y;
+				index = stoi(current,nullptr,10);
+				str >> x;
+				str >> y;
+				cout << "creating city " << index << " " << x << " " << y << endl;
+				CityHolder.push_back(City(index,x,y));
+				gottenCities++;
+			} else if(gettingCities && gottenCities>=numCities){
+				gettingCities = false;
+			}
+			if(current == "Y):"){
+				gettingCities = true;
+			}
+			// get the knapsack items
+			if(gettingItems && gottenItems<numItems){
+				int index,profit,weight,node;
+				index = stoi(current,nullptr,10);
+				str >> profit;
+				str >> weight;
+				str >> node;
+				cout << "creating item " << index << " " << profit << " " << weight << " for city " << node << endl;
+				CityHolder[node-1].addItem(Item(index,profit,weight));
+				gottenItems++;
+			} else if(gettingItems && gottenItems>=numItems){
+				gettingItems = false;
+			}
+			if(current == "NUMBER):"){
+				gettingItems = true;
+			}
+		}
+	}
+
+	pclose(input);
+
+	// cout << endl << "Knapsack type is " << knapsackDataType << endl;
+
 	int currentX = CityHolder[0].giveX();
 	int currentY = CityHolder[0].giveY();
+
 	vector<City> VisitableCities = CityHolder;
 	vector<City> VisitedCities;
+
 	VisitedCities.push_back(VisitableCities[0]);
 	VisitableCities.erase(VisitableCities.begin() + 0);
+
 	while(VisitableCities.size() > 0){
 		int theclosestcity = closestCity(currentX,currentY,VisitableCities);
 		currentX = VisitableCities[theclosestcity].giveX();
@@ -100,6 +199,7 @@ int main(){
 		VisitedCities.push_back(VisitableCities[theclosestcity]);
 		VisitableCities.erase(VisitableCities.begin() + theclosestcity);
 	}
+
 	ofstream outputfile;
 	outputfile.open ("solution.txt");
 
@@ -110,6 +210,7 @@ int main(){
 			outputfile << ",";
 		}
 	}
+
 	outputfile << "]" << endl;
 	outputfile << "[";
 	for(int i = 0 ; i < Knapsack.size(); i++){
@@ -117,7 +218,9 @@ int main(){
 			outputfile << ",";
 		}
 	}
+
 	outputfile << "]";
 	outputfile.close();
+
 	return 0;
 }
